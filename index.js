@@ -1,5 +1,22 @@
 var macAddress = window.location.href;
 
+var JSONConfig = {
+  nodes:[],
+  edges:[
+  ],
+}
+
+function createJSONConfig(){
+  var nodeCount = Math.random() * 100;
+  var edgeCount = Math.random() * 200;
+  for(var i = 0; i < nodeCount; i++){
+    JSONConfig.nodes[i] = `${i}`;
+  }
+  for(var i = 0; i  < edgeCount; i++){
+    JSONConfig.edges[i] = [`${Math.random()* 500}`, `${Math.random() * 500}`];
+  }
+}
+
 function removeCharacter(address){
     address.replace('https://hubenov.org/', '');
     return address;
@@ -17,7 +34,7 @@ function fetchDataFromDB(){
 fetchDataFromDB();
 
 (function($){
-
+  createJSONConfig();
   var Renderer = function(canvas){
     var canvas = $(canvas).get(0)
     var ctx = canvas.getContext("2d");
@@ -39,7 +56,7 @@ fetchDataFromDB();
         // inform the system of the screen dimensions so it can map coords for us.
         // if the canvas is ever resized, screenSize should be called again with
         // the new dimensions
-        particleSystem.screenSize(canvas.width, canvas.height) 
+        particleSystem.screenSize(5000, 5000) 
         particleSystem.screenPadding(100) // leave an extra 80px of whitespace per side
         
         // set up some event handlers to allow for node-dragging
@@ -150,13 +167,10 @@ fetchDataFromDB();
     sys.renderer = Renderer("#viewport") // our newly created renderer will have its .init() method called shortly by sys...
 
     // add some nodes to the graph and watch it go...
-    sys.addEdge('a','b');
-    sys.addEdge('a','c');
-    sys.addEdge('a','d');
-    sys.addEdge('a','e');
-    sys.addEdge('f','d');
-    sys.addEdge('c','d');
-
+    var JSONEdgeCnt = JSONConfig.edges.length;
+    console.log(JSONEdgeCnt);
+    for(var i = 0; i < JSONEdgeCnt; i++)
+      sys.addEdge(JSONConfig.edges[i][0],JSONConfig.edges[i][1] );
     // or, equivalently:
     //
     // sys.graft({
