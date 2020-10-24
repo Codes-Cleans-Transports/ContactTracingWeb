@@ -1,21 +1,39 @@
 var macAddress = window.location.href;
 
 var JSONConfig = {
-  nodes:[],
-  edges:[
+  nodes:[
+    ['a', 25],
+    ['b', 100],
+    ['c', 75],
+    ['d', 55],
+    ['e', 45],
+    ['f', 75],
+    ['root', 10]
   ],
-}
 
-function createJSONConfig(){
-  var nodeCount = Math.random() * 100;
-  var edgeCount = Math.random() * 200;
-  for(var i = 0; i < nodeCount; i++){
-    JSONConfig.nodes[i] = `${i}`;
-  }
-  for(var i = 0; i  < edgeCount; i++){
-    JSONConfig.edges[i] = [`${Math.random()* 500}`, `${Math.random() * 500}`];
-  }
+  edges:[
+    ['a', 'b'],
+    ['b', 'd'],
+    ['d', 'a'],
+    ['a', 'c'],
+    ['c', 'f'],
+    ['a', 'b'],
+    ['c', 'e'],
+    ['f', 'b'],
+    ['e', 'b'],
+    ['e', 'a'],
+    ['f', 'e'],
+    ['root', 'e']
+  ],
+  root:['root']
 }
+var riskGradient = [
+  '#ff0000',
+  '#fcca00',
+  '#fc6900',
+  '#00ff00'
+]
+
 
 function removeCharacter(address){
     address.replace('https://hubenov.org/', '');
@@ -34,7 +52,6 @@ function fetchDataFromDB(){
 fetchDataFromDB();
 
 (function($){
-  createJSONConfig();
   var Renderer = function(canvas){
     var canvas = $(canvas).get(0)
     var ctx = canvas.getContext("2d");
@@ -42,7 +59,6 @@ fetchDataFromDB();
     base_image = new Image();
     base_image.src = './images/logo.png';
     ctx.drawImage(base_image, 100, 100);
-    
     var that = {
       init:function(system){
         //
@@ -56,7 +72,7 @@ fetchDataFromDB();
         // inform the system of the screen dimensions so it can map coords for us.
         // if the canvas is ever resized, screenSize should be called again with
         // the new dimensions
-        particleSystem.screenSize(5000, 5000) 
+        particleSystem.screenSize(canvas.width, canvas.height);
         particleSystem.screenPadding(100) // leave an extra 80px of whitespace per side
         
         // set up some event handlers to allow for node-dragging
@@ -76,7 +92,7 @@ fetchDataFromDB();
 
         ctx.fillStyle = "black"
         ctx.fillRect(0,0, canvas.width, canvas.height)
-        
+        ctx.set
         particleSystem.eachEdge(function(edge, pt1, pt2){
           // edge: {source:Node, target:Node, length:#, data:{}}
           // pt1:  {x:#, y:#}  source position in screen coords
@@ -96,12 +112,29 @@ fetchDataFromDB();
           // pt:   {x:#, y:#}  node position in screen coords
 
           // draw a rectangle centered at pt
-          var rad = 15;
+          var rad = 20;
+          if(node.name == JSONConfig.root){
+            ctx.strokeStyle = '#0000ff';
+            ctx.lineWidth = 7;
+            rad+=10;
+          }
           ctx.beginPath();
-          ctx.fillStyle = (node.data.alone) ? "orange" : "#808080"
-          ctx.arc(pt.x, pt.y, rad, 0, 2 * Math.PI);
+          if(node.data.riskFactor <= 25)
+            ctx.fillStyle = riskGradient[3];
+          else if(node.data.riskFactor > 25 && node.data.riskFactor <= 50)
+            ctx.fillStyle = riskGradient[2];
+          else if(node.data.riskFactor <= 75 && node.data.riskFactor > 50 )
+            ctx.fillStyle = riskGradient[1];
+          else
+            ctx.fillStyle = riskGradient[0];
+
+          ctx.arc(pt.x, pt.y - 5, rad, 0, 2 * Math.PI);
           ctx.fill();
           ctx.stroke();
+          ctx.font = "bold 15px Arial";
+          ctx.fillStyle = "black";
+          ctx.textAlign = "center";
+          ctx.fillText(`${node.data.riskFactor}`, pt.x, pt.y);
         })    	
         ctx.drawImage(base_image, 50, 50);
 		
@@ -162,30 +195,17 @@ fetchDataFromDB();
     return that
   }    
   $(document).ready(function(){
-    var sys = arbor.ParticleSystem(25, 1000, 0.4  , 55) // create the system with sensible repulsion/stiffness/friction
+    var sys = arbor.ParticleSystem(25, 2500, 0.8  , 90) // create the system with sensible repulsion/stiffness/friction
     sys.parameters({gravity:true}) // use center-gravity to make the graph settle nicely (ymmv)
     sys.renderer = Renderer("#viewport") // our newly created renderer will have its .init() method called shortly by sys...
 
     // add some nodes to the graph and watch it go...
-    var JSONEdgeCnt = JSONConfig.edges.length;
-    console.log(JSONEdgeCnt);
-    for(var i = 0; i < JSONEdgeCnt; i++)
-      sys.addEdge(JSONConfig.edges[i][0],JSONConfig.edges[i][1] );
-    // or, equivalently:
-    //
-    // sys.graft({
-    //   nodes:{
-    //     f:{alone:true, mass:.25}
-    //   }, 
-    //   edges:{
-    //     a:{ b:{},
-    //         c:{},
-    //         d:{},
-    //         e:{}
-    //     }
-    //   }
-    // })
-    
+    var nodeCount = JSONConfig.nodes.length;
+    var edgeCount = JSONConfig.edges.length;
+    for(var i = 0; i < nodeCount; i++)
+      sys.addNode(JSONConfig.nodes[i][0], {riskFactor: JSONConfig.nodes[i][1]});
+    for(var i = 0; i < edgeCount; i++)
+      sys.addEdge(JSONConfig.edges[i][0], JSONConfig.edges[i][1]);
   })
 
 })(this.jQuery)
