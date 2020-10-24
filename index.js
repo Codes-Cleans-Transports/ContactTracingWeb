@@ -22,7 +22,10 @@ fetchDataFromDB();
     var canvas = $(canvas).get(0)
     var ctx = canvas.getContext("2d");
     var particleSystem
-
+    base_image = new Image();
+    base_image.src = './images/logo.png';
+    ctx.drawImage(base_image, 100, 100);
+    
     var that = {
       init:function(system){
         //
@@ -37,7 +40,7 @@ fetchDataFromDB();
         // if the canvas is ever resized, screenSize should be called again with
         // the new dimensions
         particleSystem.screenSize(canvas.width, canvas.height) 
-        particleSystem.screenPadding(80) // leave an extra 80px of whitespace per side
+        particleSystem.screenPadding(100) // leave an extra 80px of whitespace per side
         
         // set up some event handlers to allow for node-dragging
         that.initMouseHandling()
@@ -53,7 +56,8 @@ fetchDataFromDB();
         // which allow you to step through the actual node objects but also pass an
         // x,y point in the screen's coordinate system
         // 
-        ctx.fillStyle = "green"
+
+        ctx.fillStyle = "black"
         ctx.fillRect(0,0, canvas.width, canvas.height)
         
         particleSystem.eachEdge(function(edge, pt1, pt2){
@@ -62,7 +66,7 @@ fetchDataFromDB();
           // pt2:  {x:#, y:#}  target position in screen coords
 
           // draw a line from pt1 to pt2
-          ctx.strokeStyle = "rgba(0,0,0, 1)"
+          ctx.strokeStyle = "#ffffff"
           ctx.lineWidth = 1.2
           ctx.beginPath()
           ctx.moveTo(pt1.x, pt1.y)
@@ -75,13 +79,15 @@ fetchDataFromDB();
           // pt:   {x:#, y:#}  node position in screen coords
 
           // draw a rectangle centered at pt
-          var rad = 20;
+          var rad = 15;
           ctx.beginPath();
-          ctx.fillStyle = (node.data.alone) ? "orange" : "black"
+          ctx.fillStyle = (node.data.alone) ? "orange" : "#808080"
           ctx.arc(pt.x, pt.y, rad, 0, 2 * Math.PI);
           ctx.fill();
           ctx.stroke();
-        })    			
+        })    	
+        ctx.drawImage(base_image, 50, 50);
+		
       },
       
       initMouseHandling:function(){
@@ -139,16 +145,16 @@ fetchDataFromDB();
     return that
   }    
   $(document).ready(function(){
-    var sys = arbor.ParticleSystem() // create the system with sensible repulsion/stiffness/friction
+    var sys = arbor.ParticleSystem(25, 1000, 0.4  , 55) // create the system with sensible repulsion/stiffness/friction
     sys.parameters({gravity:true}) // use center-gravity to make the graph settle nicely (ymmv)
     sys.renderer = Renderer("#viewport") // our newly created renderer will have its .init() method called shortly by sys...
 
     // add some nodes to the graph and watch it go...
-    sys.addEdge('a','b')
-    sys.addEdge('a','c')
-    sys.addEdge('a','d')
-    sys.addEdge('a','e')
-    sys.addNode('f', {alone:true, mass:.25})
+    sys.addEdge('a','b');
+    sys.addEdge('a','c');
+    sys.addEdge('a','d');
+    sys.addEdge('a','e');
+    sys.addEdge('f','d');
     sys.addEdge('c','d');
 
     // or, equivalently:
