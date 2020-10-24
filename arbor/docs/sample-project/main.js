@@ -1,20 +1,8 @@
-var macAddress = window.location.href;
-
-function removeCharacter(address){
-    address.replace('https://hubenov.org/', '');
-    return address;
-}
-
-function fetchDataFromDB(){
-   /* macAddress = removeCharacter(macAddress);
-    fetch("http://37cddd59b076.ngrok.io/users/Ivan")
-    .then(response => {
-       return response.json()
-    })
-    .then(data=> console.log(data));*/
-}
-
-fetchDataFromDB();
+//
+//  main.js
+//
+//  A project template for using arbor.js
+//
 
 (function($){
 
@@ -53,7 +41,7 @@ fetchDataFromDB();
         // which allow you to step through the actual node objects but also pass an
         // x,y point in the screen's coordinate system
         // 
-        ctx.fillStyle = "green"
+        ctx.fillStyle = "white"
         ctx.fillRect(0,0, canvas.width, canvas.height)
         
         particleSystem.eachEdge(function(edge, pt1, pt2){
@@ -62,8 +50,8 @@ fetchDataFromDB();
           // pt2:  {x:#, y:#}  target position in screen coords
 
           // draw a line from pt1 to pt2
-          ctx.strokeStyle = "rgba(0,0,0, 1)"
-          ctx.lineWidth = 1.2
+          ctx.strokeStyle = "rgba(0,0,0, .333)"
+          ctx.lineWidth = 1
           ctx.beginPath()
           ctx.moveTo(pt1.x, pt1.y)
           ctx.lineTo(pt2.x, pt2.y)
@@ -75,12 +63,9 @@ fetchDataFromDB();
           // pt:   {x:#, y:#}  node position in screen coords
 
           // draw a rectangle centered at pt
-          var rad = 20;
-          ctx.beginPath();
+          var w = 10
           ctx.fillStyle = (node.data.alone) ? "orange" : "black"
-          ctx.arc(pt.x, pt.y, rad, 0, 2 * Math.PI);
-          ctx.fill();
-          ctx.stroke();
+          ctx.fillRect(pt.x-w/2, pt.y-w/2, w,w)
         })    			
       },
       
@@ -138,8 +123,9 @@ fetchDataFromDB();
     }
     return that
   }    
+
   $(document).ready(function(){
-    var sys = arbor.ParticleSystem() // create the system with sensible repulsion/stiffness/friction
+    var sys = arbor.ParticleSystem(1000, 600, 0.5) // create the system with sensible repulsion/stiffness/friction
     sys.parameters({gravity:true}) // use center-gravity to make the graph settle nicely (ymmv)
     sys.renderer = Renderer("#viewport") // our newly created renderer will have its .init() method called shortly by sys...
 
@@ -149,7 +135,6 @@ fetchDataFromDB();
     sys.addEdge('a','d')
     sys.addEdge('a','e')
     sys.addNode('f', {alone:true, mass:.25})
-    sys.addEdge('c','d');
 
     // or, equivalently:
     //
