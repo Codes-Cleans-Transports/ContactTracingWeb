@@ -19,7 +19,7 @@ var nodes = {
   radius: 25,
   root:{
     strokeStyle: "blue",
-    lineWidth: 7,
+    lineWidth: 10,
     radIncrease: 10
   }
 }

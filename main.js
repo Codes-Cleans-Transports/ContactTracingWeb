@@ -1,5 +1,18 @@
-var macAddress = window.location.href;
-var inContactWith = 0;
+var macAddress;
+var inContactWith = -1;
+
+function getMac(){
+  macAddress = window.location.href;
+  var addressPos;
+  console.log(macAddress.length);
+  console.log(macAddress);
+  for(var i = macAddress.length - 1; i >= 0; i--){
+    if(macAddress == '/')
+      addressPos = i;
+  }
+  macAddress = macAddress.substring(addressPos, macAddress);
+  console.log('{', macAddress);
+}
 
 const getDeviceType = () => {
   const ua = navigator.userAgent;
@@ -16,24 +29,15 @@ const getDeviceType = () => {
   return "desktop";
 };
 
-function removeCharacter(address){
-    address.replace('https://hubenov.org/', '');
-    return address;
-}
-
 function fetchDataFromDB(){
-    macAddress = removeCharacter(macAddress);
-    fetch("http://2ef5eda78d0f.ngrok.io/contacts/az/")
+    getMac();
+    return fetch(`http://c3d39bd087a5.ngrok.io/contacts/${macAddress}/`)
     .then(response => {
        return response.json()
     })
-    .then(data=> console.log(data, "data fetcehd"))
- 
 }
 
 (function($){
-  fetchDataFromDB();
-  getInformation();
   var deviceType = getDeviceType();
   var Renderer = function(canvas){
     var canvas = $(canvas).get(0)
@@ -66,11 +70,10 @@ function fetchDataFromDB(){
 
         particleSystem.eachNode(function(node, pt){
           var rad = nodes.radius;
-          if(node.name == graph.root){
-            ctx.strokeStyle = nodes.root.strokeStyle;
-            ctx.lineWidth = nodes.root.lineWidth;
-            rad+=nodes.root.radIncrease;
-          }
+          console.log(node.name, "{")
+         
+
+          console.log('}');
           ctx.beginPath();
           if(node.data.riskFactor <= 25)
             ctx.fillStyle = riskGradient[3];
@@ -81,9 +84,17 @@ function fetchDataFromDB(){
           else
             ctx.fillStyle = riskGradient[0];
 
+          if(node.name == graph.root[0]){
+            ctx.strokeStyle = nodes.root.strokeStyle;
+            ctx.lineWidth = nodes.root.lineWidth;
+            rad+=nodes.root.radIncrease;
+          }
           ctx.arc(pt.x, pt.y, rad, 0, 2 * Math.PI);
+          if(node.name == graph.root[0]){
+            ctx.stroke(); 
+          }
           ctx.fill();
-          ctx.stroke();
+         
           ctx.font = text.percentage.font;
           ctx.fillStyle = text.percentage.fillStyle;
           ctx.textAlign = text.percentage.align;
@@ -172,16 +183,30 @@ function fetchDataFromDB(){
     return that
   }    
   $(document).ready(function(){
+
     var sys = arbor.ParticleSystem(250, 2500, 0.8, 120)
     sys.parameters({gravity:true}) 
     sys.renderer = Renderer("#viewport") 
-
+    fetchDataFromDB().then(data => {
+      graph = data;
+      var nodeCount = graph.nodes.length;
+      var edgeCount = graph.edges.length;
+      for(var i = 0; i < nodeCount; i++)
+        sys.addNode(graph.nodes[i][0], {riskFactor: graph.nodes[i][1] * 100});
+      for(var i = 0; i < edgeCount; i++)
+        sys.addEdge(graph.edges[i][0], graph.edges[i][1])
+        getInformation();
+        console.log(graph);
+      }
+    )
     var nodeCount = graph.nodes.length;
-    var edgeCount = graph.edges.length;
-    for(var i = 0; i < nodeCount; i++)
-      sys.addNode(graph.nodes[i][0], {riskFactor: graph.nodes[i][1]});
-    for(var i = 0; i < edgeCount; i++)
-      sys.addEdge(graph.edges[i][0], graph.edges[i][1]);
+      var edgeCount = graph.edges.length;
+      for(var i = 0; i < nodeCount; i++)
+        sys.addNode(graph.nodes[i][0], {riskFactor: graph.nodes[i][1] * 100});
+      for(var i = 0; i < edgeCount; i++)
+        sys.addEdge(graph.edges[i][0], graph.edges[i][1])
+        getInformation();
+        console.log(graph)
   })
 
 })(this.jQuery)
@@ -201,5 +226,4 @@ function drawText(ctx, canvas){
   ctx.fillStyle = text.information.fillStyle;
   ctx.fillText(`In contact with: ${inContactWith} `, text.information.x, text.information.y);
   ctx.fillText(`Total people in graph: ${graph.nodes.length} `, text.information.x, text.information.y + text.information.spacing);
-  ctx.stroke();
 }
