@@ -1,24 +1,40 @@
 var macAddress = window.location.href;
 var inContactWith = 0;
 
+const getDeviceType = () => {
+  const ua = navigator.userAgent;
+  if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+    return "tablet";
+  }
+  if (
+    /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(
+      ua
+    )
+  ) {
+    return "mobile";
+  }
+  return "desktop";
+};
+
 function removeCharacter(address){
     address.replace('https://hubenov.org/', '');
     return address;
 }
 
 function fetchDataFromDB(){
-   /* macAddress = removeCharacter(macAddress);
-    fetch("http://37cddd59b076.ngrok.io/users/Ivan")
+    macAddress = removeCharacter(macAddress);
+    fetch("http://2ef5eda78d0f.ngrok.io/contacts/az/")
     .then(response => {
        return response.json()
     })
-    .then(data=> console.log(data));*/
+    .then(data=> console.log(data, "data fetcehd"))
+ 
 }
 
-fetchDataFromDB();
-
 (function($){
+  fetchDataFromDB();
   getInformation();
+  var deviceType = getDeviceType();
   var Renderer = function(canvas){
     var canvas = $(canvas).get(0)
     var ctx = canvas.getContext("2d");
@@ -42,7 +58,7 @@ fetchDataFromDB();
         particleSystem.eachEdge(function(edge, pt1, pt2){
           ctx.strokeStyle = edges.strokeStyle;
           ctx.lineWidth = edges.lineWidth;
-          ctx.beginPath();
+          ctx.beginPath();  
           ctx.moveTo(pt1.x, pt1.y)
           ctx.lineTo(pt2.x, pt2.y)
           ctx.stroke()
@@ -65,13 +81,13 @@ fetchDataFromDB();
           else
             ctx.fillStyle = riskGradient[0];
 
-          ctx.arc(pt.x, pt.y - 5, rad, 0, 2 * Math.PI);
+          ctx.arc(pt.x, pt.y, rad, 0, 2 * Math.PI);
           ctx.fill();
           ctx.stroke();
           ctx.font = text.percentage.font;
           ctx.fillStyle = text.percentage.fillStyle;
           ctx.textAlign = text.percentage.align;
-          ctx.fillText(`${node.data.riskFactor}`, pt.x, pt.y);
+          ctx.fillText(`${node.data.riskFactor}`, pt.x, pt.y + text.percentage.padding);
           ctx.drawImage(logo, logoInfo.x, logoInfo.y);
           drawText(ctx, canvas)
         })    	
@@ -82,23 +98,47 @@ fetchDataFromDB();
       initMouseHandling:function(){
         var dragged = null;
         var handler = {
-          clicked:function(e){
+          clicked:function(e){              
             var pos = $(canvas).offset();
-            _mouseP = arbor.Point(e.pageX-pos.left, e.pageY-pos.top)
+            var touch, x, y;
+            if(e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend' || e.type == 'touchcancel'){
+                touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+                x = touch.pageX;
+                y = touch.pageY;
+            } else if (e.type == 'mousedown' || e.type == 'mouseup' || e.type == 'mousemove' || e.type == 'mouseover'|| e.type=='mouseout' || e.type=='mouseenter' || e.type=='mouseleave') {
+                x = e.clientX;
+                y = e.clientY;
+            }
+
+
+           var _mouseP = arbor.Point(x, y)
             dragged = particleSystem.nearest(_mouseP);
 
             if (dragged && dragged.node !== null){
               dragged.node.fixed = true
             }
-
-            $(canvas).bind('mousemove', handler.dragged)
-            $(window).bind('mouseup', handler.dropped)
+            if(deviceType == 'mobile'){
+              $(canvas).bind('touchmove', handler.dragged)
+              $(window).bind('touchend', handler.dropped)
+            } else if(deviceType == 'desktop'){
+              $(canvas).bind('mousemove', handler.dragged)
+              $(window).bind('mouseup', handler.dropped)
+            }
 
             return false
           },
           dragged:function(e){
             var pos = $(canvas).offset();
-            var s = arbor.Point(e.pageX-pos.left, e.pageY-pos.top)
+            var touch, x, y;
+            if(e.type == 'touchstart' || e.type == 'touchmove' || e.type == 'touchend' || e.type == 'touchcancel'){
+              touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+              x = touch.pageX;
+              y = touch.pageY;
+            } else if (e.type == 'mousedown' || e.type == 'mouseup' || e.type == 'mousemove' || e.type == 'mouseover'|| e.type=='mouseout' || e.type=='mouseenter' || e.type=='mouseleave') {
+                x = e.clientX;
+                y = e.clientY;
+            }
+            var s = arbor.Point(x, y);
 
             if (dragged && dragged.node !== null){
               var p = particleSystem.fromScreen(s)
@@ -113,8 +153,13 @@ fetchDataFromDB();
             if (dragged.node !== null) dragged.node.fixed = false
             dragged.node.tempMass = 1000
             dragged = null
-            $(canvas).unbind('mousemove', handler.dragged)
-            $(window).unbind('mouseup', handler.dropped)
+            if(deviceType == 'desktop'){
+              $(canvas).unbind('mousemove', handler.dragged)
+              $(window).unbind('mouseup', handler.dropped)
+            } else if(deviceType == 'mobile'){
+              $(canvas).unbind('touchmove', handler.dragged)
+              $(window).unbind('touchstart', handler.dropped)
+            }
             _mouseP = null
             return false
           }
@@ -127,7 +172,7 @@ fetchDataFromDB();
     return that
   }    
   $(document).ready(function(){
-    var sys = arbor.ParticleSystem(250, 2500, 0.8  , 90)
+    var sys = arbor.ParticleSystem(250, 2500, 0.8, 120)
     sys.parameters({gravity:true}) 
     sys.renderer = Renderer("#viewport") 
 

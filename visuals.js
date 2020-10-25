@@ -30,13 +30,14 @@ var text = {
     font: '30px Arial',
     fillStyle: '#7896AF',
     spacing: 50,
-    x: 10,
-    y: 250
+    x: 20,
+    y: 1000
   },
   percentage:{
-    font: 'bold 15px Arial',
+    font: 'bold 20px Arial',
     fillStyle: '#000000',
-    align: 'center'
+    align: 'center',
+    padding: 7
   }
 };
 
